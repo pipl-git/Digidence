@@ -84,7 +84,7 @@ class StatefulCheckBoxState extends State<StatefulCheckBox> {
 }
 
 /*
-  Stateful Checkbox. Remembers checked or unchecked.
+  Stateful Slider.
 */
 class StatefulSlider extends StatefulWidget {
   StatefulSlider({Key key, this.val, this.labels, this.onChanged})

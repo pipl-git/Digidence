@@ -18,7 +18,7 @@ class CheckInData {
   int pain = 0;
   String other;
 
-  Future<Rslt> init(BuildContext context, int id) async {
+  init(BuildContext context, int id) async {
     usrId = id;
 
     var formatter = new DateFormat('yyyyMMdd');
@@ -35,7 +35,12 @@ class CheckInData {
       pain = rslt.data['pain'] ?? 0;
       other = rslt.data['other'];
     }
-    return rslt;
+
+    if (rslt.rc != 0) return;
+    Navigator.pushReplacement(context,
+        MaterialPageRoute(builder: (BuildContext context) {
+      return CheckInHome(checkInData: this);
+    }));
   }
 
   Future<Rslt> save(BuildContext context) async {
@@ -110,15 +115,28 @@ class CheckInPanel extends StatefulWidget {
 
   @override
   _CheckInPanelState createState() {
-    return _CheckInPanelState();
+    return _CheckInPanelState(checkInData);
   }
 }
 
 class _CheckInPanelState extends State<CheckInPanel> {
+  _CheckInPanelState(this.checkInData);
+  final CheckInData checkInData;
+  final GlobalKey<OtherDataState> otherDataKey = GlobalKey<OtherDataState>();
+  final GlobalKey<SwellingDataState> swellingDataKey =
+      GlobalKey<SwellingDataState>();
+  final GlobalKey<PainDataState> painDataKey = GlobalKey<PainDataState>();
+
   int currPanel = 1;
+  final int activityPanel = 1;
+  final int swellingPanel = 2;
+  final int attentionPanel = 3;
+  final int otherPanel = 4;
+  final int painPanel = 5;
+  final int lastPanel = 5;
 
   skip(BuildContext context) {
-    next(context);
+    next(context, skip: true);
   }
 
   back(BuildContext context) {
@@ -131,8 +149,20 @@ class _CheckInPanelState extends State<CheckInPanel> {
     }
   }
 
-  next(BuildContext context) {
-    if (currPanel < 5) {
+  next(BuildContext context, {bool skip = false}) {
+    if (!skip) {
+      if (currPanel == swellingPanel) {
+        checkInData.swelling_1 = swellingDataKey.currentState.swelling_1;
+        checkInData.swelling_2 = swellingDataKey.currentState.swelling_2;
+        checkInData.swelling_3 = swellingDataKey.currentState.swelling_3;
+      } else if (currPanel == otherPanel) {
+        checkInData.other = otherDataKey.currentState.currValue;
+      } else if (currPanel == painPanel) {
+        checkInData.pain = painDataKey.currentState.pain;
+      }
+    }
+
+    if (currPanel < lastPanel) {
       setState(() {
         currPanel++;
       });
@@ -172,18 +202,17 @@ class _CheckInPanelState extends State<CheckInPanel> {
 
   @override
   Widget build(BuildContext context) {
-    var checkInData = widget.checkInData;
     Widget body;
-    if (currPanel == 1) {
+    if (currPanel == activityPanel) {
       body = ActivityData(checkInData, next);
-    } else if (currPanel == 2) {
-      body = SwellingData(checkInData, next);
-    } else if (currPanel == 3) {
+    } else if (currPanel == swellingPanel) {
+      body = SwellingData(swellingDataKey, checkInData, next);
+    } else if (currPanel == attentionPanel) {
       body = AttentionData(checkInData, next);
-    } else if (currPanel == 4) {
-      body = OtherData(checkInData, next);
-    } else if (currPanel == 5) {
-      body = PainData(checkInData, next);
+    } else if (currPanel == otherPanel) {
+      body = OtherData(otherDataKey, checkInData, next);
+    } else if (currPanel == painPanel) {
+      body = PainData(painDataKey, checkInData, next);
     }
 
     return Scaffold(
@@ -197,30 +226,25 @@ class _CheckInPanelState extends State<CheckInPanel> {
             padding: Util.outerPadding(context), child: body),
         bottomNavigationBar:
             Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
-          currPanel < 5
-              ? GestureDetector(
-                  child: Text('skip',
-                      style: TextStyle(
-                          decoration: TextDecoration.underline,
-                          fontSize: 16,
-                          color: Colors.black54)),
-                  onTap: () {
-                    skip(context);
-                  })
-              : Container(),
+          GestureDetector(
+              child: Text('skip',
+                  style: TextStyle(
+                      decoration: TextDecoration.underline,
+                      fontSize: 16,
+                      color: Colors.black54)),
+              onTap: () {
+                skip(context);
+              }),
           ButtonBar(
             alignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
               Util.bottomButton('Back', () {
                 back(context);
               }),
-              currPanel < 5
-                  ? Util.bottomButton('Next', () {
-                      next(context);
-                    })
-                  : Util.bottomButton('Finish', () {
-                      done(context);
-                    }),
+              Util.bottomButton((currPanel < lastPanel ? 'Next' : 'Finish'),
+                  () {
+                next(context);
+              }),
             ],
           ),
         ]));
@@ -287,10 +311,21 @@ class AttentionData extends StatelessWidget {
   }
 }
 
-class SwellingData extends StatelessWidget {
-  SwellingData(this.checkInData, this.onNext);
+class SwellingData extends StatefulWidget {
+  SwellingData(Key key, this.checkInData, this.onNext) : super(key: key);
   final CheckInData checkInData;
   final NextPanel onNext;
+
+  @override
+  SwellingDataState createState() {
+    return SwellingDataState();
+  }
+}
+
+class SwellingDataState extends State<SwellingData> {
+  int swelling_1 = 0;
+  int swelling_2 = 0;
+  int swelling_3 = 0;
 
   final btns_1 = [
     [1, 'NEVER', 'Never'],
@@ -316,6 +351,14 @@ class SwellingData extends StatelessWidget {
     [5, '4', 'Lot'],
     [6, 'VERY MUCH', 'Very Much']
   ];
+
+  @override
+  initState() {
+    super.initState();
+    swelling_1 = widget.checkInData.swelling_1;
+    swelling_2 = widget.checkInData.swelling_2;
+    swelling_3 = widget.checkInData.swelling_3;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -361,35 +404,50 @@ class SwellingData extends StatelessWidget {
       header_1,
       HorizontalButtonsPanel(
         buttons: btns_1,
-        selectedButton: checkInData.swelling_1,
+        selectedButton: swelling_1,
         onPressed: (btnNo) {
-          checkInData.swelling_1 = btnNo;
+          swelling_1 = btnNo;
         },
       ),
       header_2,
       HorizontalButtonsPanel(
         buttons: btns_2,
-        selectedButton: checkInData.swelling_2,
+        selectedButton: swelling_2,
         onPressed: (btnNo) {
-          checkInData.swelling_2 = btnNo;
+          swelling_2 = btnNo;
         },
       ),
       header_3,
       HorizontalButtonsPanel(
         buttons: btns_3,
-        selectedButton: checkInData.swelling_3,
+        selectedButton: swelling_3,
         onPressed: (btnNo) {
-          checkInData.swelling_3 = btnNo;
+          swelling_3 = btnNo;
         },
       ),
     ]);
   }
 }
 
-class OtherData extends StatelessWidget {
-  OtherData(this.checkInData, this.onNext);
+class OtherData extends StatefulWidget {
+  OtherData(Key key, this.checkInData, this.onNext) : super(key: key);
   final CheckInData checkInData;
   final NextPanel onNext;
+
+  @override
+  OtherDataState createState() {
+    return OtherDataState();
+  }
+}
+
+class OtherDataState extends State<OtherData> {
+  String currValue;
+
+  @override
+  initState() {
+    super.initState();
+    currValue = widget.checkInData.other;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -401,7 +459,7 @@ class OtherData extends StatelessWidget {
         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
       ),
       TextFormField(
-          initialValue: checkInData.other,
+          initialValue: currValue,
           autofocus: true,
           maxLines: 7,
           textInputAction: TextInputAction.done,
@@ -409,20 +467,29 @@ class OtherData extends StatelessWidget {
             border: OutlineInputBorder(),
           ),
           onChanged: (text) {
-            checkInData.other = text;
+            currValue = text;
           },
           onFieldSubmitted: (text) {
-            checkInData.other = text;
-            onNext(context);
+            currValue = text;
+            widget.onNext(context);
           }),
     ]);
   }
 }
 
-class PainData extends StatelessWidget {
-  PainData(this.checkInData, this.onNext);
+class PainData extends StatefulWidget {
+  PainData(Key key, this.checkInData, this.onNext) : super(key: key);
   final CheckInData checkInData;
   final NextPanel onNext;
+
+  @override
+  PainDataState createState() {
+    return PainDataState();
+  }
+}
+
+class PainDataState extends State<PainData> {
+  int pain = 0;
 
   final labels = [
     'None',
@@ -439,6 +506,12 @@ class PainData extends StatelessWidget {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    pain = widget.checkInData.pain;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(children: <Widget>[
       Util.getProgressBar(1),
@@ -450,10 +523,10 @@ class PainData extends StatelessWidget {
       ),
       SizedBox(height: 50),
       StatefulSlider(
-        val: checkInData.pain,
+        val: pain,
         labels: labels,
         onChanged: (vl) {
-          checkInData.pain = vl;
+          pain = vl;
         },
       )
     ]);

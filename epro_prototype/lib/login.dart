@@ -1,55 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/foundation.dart';
 import 'epro_widget.dart';
 import 'util.dart';
 import 'checkin.dart';
 
-class LoginMainPage extends StatefulWidget {
-  LoginMainPage({Key key, this.onLoggedin}) : super(key: key);
-  final ValueChanged<CheckInData> onLoggedin;
-
-  @override
-  _LoginMainPageState createState() {
-    return _LoginMainPageState();
-  }
-}
-
-class _LoginMainPageState extends State<LoginMainPage> {
-  Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          centerTitle: true,
-          title: Text('ePro'),
-          bottom: TabBar(
-            tabs: [
-              Tab(text: 'Login'),
-              Tab(text: 'Register'),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            SingleChildScrollView(
-                padding: Util.outerPadding(context),
-                child: LoginPage(onLoggedin: widget.onLoggedin)),
-            SingleChildScrollView(
-                padding: Util.outerPadding(context),
-                child: RegistrationPage(onLoggedin: widget.onLoggedin)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class LoginPage extends StatefulWidget {
-  LoginPage({Key key, this.onLoggedin}) : super(key: key);
-  final ValueChanged<CheckInData> onLoggedin;
-
   @override
   _LoginPageState createState() {
     return _LoginPageState();
@@ -95,42 +51,66 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final loginButon = ButtonWithCircularProgress(
-      text: 'Login',
-      onPressed: () async {
-        var email = emailField.controller.text;
-        var password = passwordFieldController.text;
-        await login(email, password, rememberMeKey.currentState.selected);
-      },
-    );
+    final loginButton = Builder(builder: (context) {
+      return ButtonWithCircularProgress(
+        text: 'Login',
+        onPressed: () async {
+          var email = emailField.controller.text;
+          var password = passwordFieldController.text;
+          await login(
+              context, email, password, rememberMeKey.currentState.selected);
+        },
+      );
+    });
 
-    return Column(
-      children: <Widget>[
-        SizedBox(
-          height: 155.0,
-          child: Image.asset('image/check_in.png', fit: BoxFit.contain),
+    return Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          title: Text('Login'),
+          actions: <Widget>[
+            IconButton(
+                icon: Icon(Icons.person_add),
+                tooltip: 'Register new user',
+                onPressed: () {
+                  Navigator.pushReplacement(context,
+                      MaterialPageRoute(builder: (BuildContext context) {
+                    return RegistrationPage();
+                  }));
+                }),
+          ],
         ),
-        SizedBox(height: 20.0),
-        emailField,
-        SizedBox(height: 20.0),
-        PasswordField(
-            labelText: 'Password',
-            hintText: 'Enter Password',
-            editingController: passwordFieldController),
-        SizedBox(
-          height: 20.0,
-        ),
-        StatefulCheckBox(
-            key: rememberMeKey, text: 'Remember Me', selected: rememberMe),
-        SizedBox(
-          height: 20.0,
-        ),
-        loginButon,
-      ],
-    );
+        body: SingleChildScrollView(
+            padding: Util.outerPadding(context),
+            child: Column(
+              children: <Widget>[
+                SizedBox(
+                  height: 155.0,
+                  child: Image.asset('image/check_in.png', fit: BoxFit.contain),
+                ),
+                SizedBox(height: 25.0),
+                emailField,
+                SizedBox(height: 25.0),
+                PasswordField(
+                    labelText: 'Password',
+                    hintText: 'Enter Password',
+                    editingController: passwordFieldController),
+                SizedBox(
+                  height: 25.0,
+                ),
+                StatefulCheckBox(
+                    key: rememberMeKey,
+                    text: 'Remember Me',
+                    selected: rememberMe),
+                SizedBox(
+                  height: 25.0,
+                ),
+                loginButton,
+              ],
+            )));
   }
 
-  login(String email, String password, bool rememberMe) async {
+  login(BuildContext context, String email, String password,
+      bool rememberMe) async {
     if (email == null || email == '') {
       Util.snackBar(context, 'eMail is required');
       return;
@@ -139,7 +119,6 @@ class _LoginPageState extends State<LoginPage> {
       Util.snackBar(context, 'password is required');
       return;
     }
-    await new Future.delayed(const Duration(seconds: 1));
     var data = {'email': email, 'password': password};
     CheckInData checkInData = CheckInData();
     var rslt = await Util.callApi(context, 'AppsCommon', 'login', data);
@@ -155,27 +134,13 @@ class _LoginPageState extends State<LoginPage> {
       await prefs.remove('password');
     }
     var id = rslt.data;
-    rslt = await checkInData.init(context, id);
-    if (rslt.rc != 0) return;
-    //Util.snackBar(context, 'Logged in as $email');
-    //await new Future.delayed(const Duration(seconds: 1));
-    widget.onLoggedin(checkInData);
+    await checkInData.init(context, id);
   }
 }
 
-class RegistrationPage extends StatefulWidget {
-  RegistrationPage({Key key, this.onLoggedin}) : super(key: key);
-  final ValueChanged<CheckInData> onLoggedin;
-
-  @override
-  _RegistrationPageState createState() {
-    return _RegistrationPageState();
-  }
-}
-
-class _RegistrationPageState extends State<RegistrationPage> {
-  TextEditingController passwordFieldController = TextEditingController();
-  TextEditingController confirmPasswordFieldController =
+class RegistrationPage extends StatelessWidget {
+  final TextEditingController passwordFieldController = TextEditingController();
+  final TextEditingController confirmPasswordFieldController =
       TextEditingController();
   final emailField = TextFormField(
     keyboardType: TextInputType.emailAddress,
@@ -190,48 +155,69 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   @override
   Widget build(BuildContext context) {
-    final registerButton = ButtonWithCircularProgress(
-      text: 'Register',
-      onPressed: () async {
-        var email = emailField.controller.text;
-        var password = passwordFieldController.text;
-        var confirmPassword = confirmPasswordFieldController.text;
-        await register(email, password, confirmPassword);
-      },
-    );
+    final registerButton = Builder(builder: (context) {
+      return ButtonWithCircularProgress(
+        text: 'Register',
+        onPressed: () async {
+          var email = emailField.controller.text;
+          var password = passwordFieldController.text;
+          var confirmPassword = confirmPasswordFieldController.text;
+          await register(context, email, password, confirmPassword);
+        },
+      );
+    });
 
-    return Column(
-      children: <Widget>[
-        SizedBox(
-          height: 155.0,
-          child: Image.asset('image/check_in.png', fit: BoxFit.contain),
+    return Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          title: Text('Register new user'),
+          actions: <Widget>[
+            IconButton(
+                icon: Icon(Icons.person),
+                tooltip: 'Login',
+                onPressed: () {
+                  Navigator.pushReplacement(context,
+                      MaterialPageRoute(builder: (BuildContext context) {
+                    return LoginPage();
+                  }));
+                }),
+          ],
         ),
-        SizedBox(height: 20.0),
-        emailField,
-        SizedBox(height: 20.0),
-        PasswordField(
-            labelText: 'Password',
-            hintText: 'Enter Password',
-            editingController: passwordFieldController),
-        SizedBox(
-          height: 20.0,
-        ),
-        PasswordField(
-            labelText: 'Confirm Password',
-            hintText: 'Confirm Password',
-            editingController: confirmPasswordFieldController),
-        SizedBox(
-          height: 20.0,
-        ),
-        registerButton,
-        SizedBox(
-          height: 15.0,
-        ),
-      ],
-    );
+        body: SingleChildScrollView(
+            padding: Util.outerPadding(context),
+            child: Column(
+              children: <Widget>[
+                SizedBox(
+                  height: 155.0,
+                  child: Image.asset('image/check_in.png', fit: BoxFit.contain),
+                ),
+                SizedBox(height: 20.0),
+                emailField,
+                SizedBox(height: 20.0),
+                PasswordField(
+                    labelText: 'Password',
+                    hintText: 'Enter Password',
+                    editingController: passwordFieldController),
+                SizedBox(
+                  height: 20.0,
+                ),
+                PasswordField(
+                    labelText: 'Confirm Password',
+                    hintText: 'Confirm Password',
+                    editingController: confirmPasswordFieldController),
+                SizedBox(
+                  height: 20.0,
+                ),
+                registerButton,
+                SizedBox(
+                  height: 15.0,
+                ),
+              ],
+            )));
   }
 
-  register(String email, String password, String confirmPassword) async {
+  register(BuildContext context, String email, String password,
+      String confirmPassword) async {
     if (email == null || email == '') {
       Util.snackBar(context, 'eMail is required');
       return;
@@ -260,6 +246,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
     var id = rslt.data;
     rslt = await checkInData.init(context, id);
     if (rslt.rc != 0) return;
-    widget.onLoggedin(checkInData);
+
+    Navigator.pushReplacement(context,
+        MaterialPageRoute(builder: (BuildContext context) {
+      return LoginPage();
+    }));
   }
 }
