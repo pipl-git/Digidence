@@ -1,0 +1,9 @@
+<web-app>
+    <display-name>Apps Server</display-name>
+
+    <!--
+    <welcome-file-list>
+        <welcome-file>Main</welcome-file>
+    </welcome-file-list>
+    -->
+</web-app>

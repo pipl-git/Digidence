@@ -1,0 +1,16 @@
+{
+    "paths": {
+        "book": "D:\\AndroidApps\\Apps\\Data\\books",
+        "epubIn": "D:\\AndroidApps\\Apps\\Data\\epubIn",
+        "epubOut": "D:\\AndroidApps\\Apps\\Data\\epubOut"
+    },
+    "db_params": {
+        "driverClassName": "org.postgresql.Driver",
+        "url": "jdbc:postgresql://localhost/postgres",
+        "username": "epro",
+        "password": "epro",
+        "initialSize": 5,
+        "maxIdle": 2,
+        "maxActive": 10
+    }
+}

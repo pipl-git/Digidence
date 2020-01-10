@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "D:/Digidence/epro_prototype",
+			"name": "ePro"
+		},
+	],
+	"settings": {
+		"java.configuration.updateBuildConfiguration": "automatic"
+	},
+}
