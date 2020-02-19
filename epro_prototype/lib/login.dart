@@ -57,8 +57,7 @@ class _LoginPageState extends State<LoginPage> {
         onPressed: () async {
           var email = emailField.controller.text;
           var password = passwordFieldController.text;
-          await login(
-              context, email, password, rememberMeKey.currentState.selected);
+          await login(context, email, password, rememberMeKey.currentState.selected);
         },
       );
     });
@@ -72,8 +71,7 @@ class _LoginPageState extends State<LoginPage> {
                 icon: Icon(Icons.person_add),
                 tooltip: 'Register new user',
                 onPressed: () {
-                  Navigator.pushReplacement(context,
-                      MaterialPageRoute(builder: (BuildContext context) {
+                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) {
                     return RegistrationPage();
                   }));
                 }),
@@ -91,16 +89,11 @@ class _LoginPageState extends State<LoginPage> {
                 emailField,
                 SizedBox(height: 25.0),
                 PasswordField(
-                    labelText: 'Password',
-                    hintText: 'Enter Password',
-                    editingController: passwordFieldController),
+                    labelText: 'Password', hintText: 'Enter Password', editingController: passwordFieldController),
                 SizedBox(
                   height: 25.0,
                 ),
-                StatefulCheckBox(
-                    key: rememberMeKey,
-                    text: 'Remember Me',
-                    selected: rememberMe),
+                StatefulCheckBox(key: rememberMeKey, text: 'Remember Me', selected: rememberMe),
                 SizedBox(
                   height: 25.0,
                 ),
@@ -109,8 +102,7 @@ class _LoginPageState extends State<LoginPage> {
             )));
   }
 
-  login(BuildContext context, String email, String password,
-      bool rememberMe) async {
+  login(BuildContext context, String email, String password, bool rememberMe) async {
     if (email == null || email == '') {
       Util.snackBar(context, 'eMail is required');
       return;
@@ -140,8 +132,7 @@ class _LoginPageState extends State<LoginPage> {
 
 class RegistrationPage extends StatelessWidget {
   final TextEditingController passwordFieldController = TextEditingController();
-  final TextEditingController confirmPasswordFieldController =
-      TextEditingController();
+  final TextEditingController confirmPasswordFieldController = TextEditingController();
   final emailField = TextFormField(
     keyboardType: TextInputType.emailAddress,
     controller: TextEditingController(),
@@ -176,8 +167,7 @@ class RegistrationPage extends StatelessWidget {
                 icon: Icon(Icons.person),
                 tooltip: 'Login',
                 onPressed: () {
-                  Navigator.pushReplacement(context,
-                      MaterialPageRoute(builder: (BuildContext context) {
+                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) {
                     return LoginPage();
                   }));
                 }),
@@ -195,9 +185,7 @@ class RegistrationPage extends StatelessWidget {
                 emailField,
                 SizedBox(height: 20.0),
                 PasswordField(
-                    labelText: 'Password',
-                    hintText: 'Enter Password',
-                    editingController: passwordFieldController),
+                    labelText: 'Password', hintText: 'Enter Password', editingController: passwordFieldController),
                 SizedBox(
                   height: 20.0,
                 ),
@@ -216,8 +204,7 @@ class RegistrationPage extends StatelessWidget {
             )));
   }
 
-  register(BuildContext context, String email, String password,
-      String confirmPassword) async {
+  register(BuildContext context, String email, String password, String confirmPassword) async {
     if (email == null || email == '') {
       Util.snackBar(context, 'eMail is required');
       return;
@@ -244,12 +231,6 @@ class RegistrationPage extends StatelessWidget {
     rslt = await Util.callApi(context, 'AppsCommon', 'login', data);
     if (rslt.rc != 0) return;
     var id = rslt.data;
-    rslt = await checkInData.init(context, id);
-    if (rslt.rc != 0) return;
-
-    Navigator.pushReplacement(context,
-        MaterialPageRoute(builder: (BuildContext context) {
-      return LoginPage();
-    }));
+    await checkInData.init(context, id);
   }
 }

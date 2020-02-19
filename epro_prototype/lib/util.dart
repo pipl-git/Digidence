@@ -45,8 +45,7 @@ class Util {
       onPressed: onPressed,
       textColor: Colors.white,
       color: Colors.black45,
-      shape:
-          RoundedRectangleBorder(borderRadius: new BorderRadius.circular(8.0)),
+      shape: RoundedRectangleBorder(borderRadius: new BorderRadius.circular(8.0)),
       child: new Text(text),
     );
   }
@@ -55,9 +54,7 @@ class Util {
     return SizedBox(
         height: 3.0,
         child: LinearProgressIndicator(
-            value: val,
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.black45),
-            backgroundColor: Colors.black12));
+            value: val, valueColor: AlwaysStoppedAnimation<Color>(Colors.black45), backgroundColor: Colors.black12));
   }
 
   static double smallSide(BuildContext context) {
@@ -79,8 +76,7 @@ class Util {
     return padding;
   }
 
-  static Future<Rslt> callApi(BuildContext context, String apiName,
-      String methodName, Map<String, Object> data) async {
+  static Future<Rslt> callApi(BuildContext context, String apiName, String methodName, Map<String, Object> data) async {
     if (1 > 2) {
       var r = Rslt();
       var dat;
@@ -94,18 +90,15 @@ class Util {
       return r;
     }
 
-    String server = 'http://185.112.248.242';
+    String server = 'http://www.prescientinfotech.com/';
     var jsonStr = json.encode(data);
     var rslt = Rslt();
     try {
-      final response = await http.post(
-          '$server/eProServer/api?apiName=$apiName&methodName=$methodName',
-          headers: {"Content-Type": "text/plain"},
-          body: jsonStr);
+      final response = await http.post('$server/eProServer/api?apiName=$apiName&methodName=$methodName',
+          headers: {"Content-Type": "text/plain"}, body: jsonStr);
       if (response.statusCode != 200) {
         rslt.rc = -1;
-        rslt.msg =
-            'Server communication error. Errorcode: ${response.statusCode} body: ${response.body}';
+        rslt.msg = 'Server communication error. Errorcode: ${response.statusCode} body: ${response.body}';
       } else {
         jsonStr = response.body;
         var map = json.decode(jsonStr);
@@ -115,9 +108,7 @@ class Util {
       }
     } catch (ex) {
       rslt.rc = -1;
-      rslt.msg = (ex.message != null && ex.message != '')
-          ? ex.message
-          : 'Server communication error';
+      rslt.msg = (ex.message != null && ex.message != '') ? ex.message : 'Server communication error';
     }
     if (rslt.rc != 0) {
       Util.snackBar(context, rslt.msg);
